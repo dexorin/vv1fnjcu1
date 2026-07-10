@@ -1,0 +1,41 @@
+name: Launch Linux Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      authcode:
+        description: "Authorization link"
+        required: true
+      pincode:
+        description: "6-digit PIN code"
+        required: true
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y lxde-core wget curl gdebi-core
+
+      - name: Install Chrome Remote Desktop
+        run: |
+          wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
+          sudo gdebi -n chrome-remote-desktop_current_amd64.deb
+          rm chrome-remote-desktop_current_amd64.deb
+
+      - name: Configure CRD session
+        run: |
+          echo "exec startlxde" | sudo tee /etc/chrome-remote-desktop-session
+
+      - name: Register CRD on runner user
+        run: |
+          ${{ github.event.inputs.authcode }} --pin=${{ github.event.inputs.pincode }}
+
+      - name: Keep alive
+        run: sleep $((6 * 3600))
