@@ -21,7 +21,7 @@ jobs:
       - name: Dependencies
         run: |
           sudo apt update
-          sudo apt install -y lxde-core wget curl gdebi-core
+          sudo apt install -y xfce4 xfce4-terminal wget curl gdebi-core
 
       - name: Install Chrome Remote Desktop
         run: |
@@ -31,7 +31,7 @@ jobs:
 
       - name: Configure CRD session
         run: |
-          echo "exec startlxde" | sudo tee /etc/chrome-remote-desktop-session
+          echo "exec startxfce4" | sudo tee /etc/chrome-remote-desktop-session
 
       - name: Register CRD on runner user
         run: |
