@@ -1,0 +1,59 @@
+name: Launch Linux (SSH) Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      alias:
+        description: "Connection alias"
+        required: true
+        default: "session"
+
+jobs:
+  setup:
+    runs-on: ubuntu-26.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y openssh-server
+
+      - name: Configure service
+        run: |
+          sudo systemctl enable ssh
+          sudo systemctl start ssh
+          sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+          echo "runner:$(openssl rand -base64 12)" | sudo chpasswd
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+      - name: Setup key
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        run: |
+          echo "$PRIVATE_KEY" > ~/.ssh/connection_key
+          chmod 600 ~/.ssh/connection_key
+          cat >> ~/.ssh/config << 'EOF'
+          Host endpoint
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null
+              IdentityFile ~/.ssh/connection_key
+              ServerAliveInterval 60
+              ServerAliveCountMax 3
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Establish connection
+        env:
+          SESSION_ALIAS: ${{ github.event.inputs.alias }}
+        run: |
+          ssh -N -R ${SESSION_ALIAS}:2222:localhost:22 endpoint &
+          sleep 5
+
+      - name: Keep alive
+        run: sleep $((6 * 3600))
