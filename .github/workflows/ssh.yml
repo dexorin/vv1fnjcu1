@@ -1,7 +1,12 @@
-name: Launch Linux (SSH) workflow
+name: Launch Linux (SSH) Workflow
 
 on:
   workflow_dispatch:
+    inputs:
+      alias:
+        description: "Alias for tunnel"
+        required: true
+        default: "session"
 
 jobs:
   setup:
@@ -34,8 +39,10 @@ jobs:
           chmod 600 ~/.ssh/authorized_keys
 
       - name: Establish connection
+        env:
+          SESSION_ALIAS: ${{ github.event.inputs.alias }}
         run: |
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -N -R 2222:localhost:22 serveo.net &
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -N -R ${SESSION_ALIAS}:22:localhost:22 serveo.net &
           sleep 5
 
       - name: Keep alive
