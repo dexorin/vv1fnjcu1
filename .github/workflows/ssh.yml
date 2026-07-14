@@ -35,7 +35,7 @@ jobs:
 
       - name: Establish connection
         run: |
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -N -R 0:localhost:22 serveo.net &
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -N -R 2222:localhost:22 serveo.net &
           sleep 5
 
       - name: Keep alive
